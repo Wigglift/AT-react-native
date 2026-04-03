@@ -1,89 +1,23 @@
-import React from 'react';
-import { View, TextInput, FlatList, ActivityIndicator, Text, StyleSheet } from 'react-native';
-import { useMovie } from '../hooks/useMovie';
-import MovieItem from '../components/MovieItem';
+import { Redirect } from 'expo-router';
+import { useAuth } from '../context/AuthContext'; // Seu hook de autenticação
+import { ActivityIndicator, View } from 'react-native';
 
-export default function MoviesScreen() {
-  const { 
-    data, 
-    loading, 
-    loadingMore, 
-    error, 
-    searchQuery, 
-    handleSearch, 
-    loadMore 
-  } = useMovie();
+export default function Index() {
+  const { user, isLoading } = useAuth();
 
-  const renderFooter = () => {
-    if (!loadingMore) return null;
+  // Importante: Enquanto o estado do usuário está carregando (ex: lendo do AsyncStorage)
+  // você deve mostrar um loading, senão ele redirecionará para o login antes da hora.
+  if (isLoading) {
     return (
-      <View style={styles.footerLoader}>
-        <ActivityIndicator size="large" color="#0000ff" />
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+        <ActivityIndicator size="large" />
       </View>
     );
-  };
+  }
 
-  return (
-    <View style={styles.container}>
-      <TextInput
-        style={styles.searchInput}
-        placeholder="Buscar filmes pelo título..."
-        value={searchQuery}
-        onChangeText={handleSearch}
-      />
+  if (!user) {
+    return <Redirect href="/LoginScreen" />;
+  }
 
-      {error && <Text style={styles.errorText}>Erro: {error}</Text>}
-
-      {loading ? (
-        <ActivityIndicator size="large" color="#0000ff" style={styles.mainLoader} />
-      ) : (
-        <FlatList
-          data={data}
-          keyExtractor={(item) => item.id.toString()}
-          renderItem={({ item }) => <MovieItem movie={item} />}
-          onEndReached={loadMore}
-          onEndReachedThreshold={0.5} 
-          ListFooterComponent={renderFooter}
-          ListEmptyComponent={
-            !loading && <Text style={styles.emptyText}>Nenhum filme encontrado.</Text>
-          }
-        />
-      )}
-    </View>
-  );
+  return <Redirect href="/Home" />;
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-  },
-  searchInput: {
-    height: 50,
-    borderWidth: 1,
-    borderColor: '#ccc',
-    borderRadius: 8,
-    margin: 10,
-    paddingHorizontal: 15,
-    fontSize: 16,
-  },
-  mainLoader: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  footerLoader: {
-    paddingVertical: 20,
-  },
-  errorText: {
-    color: 'red',
-    textAlign: 'center',
-    margin: 10,
-  },
-  emptyText: {
-    textAlign: 'center',
-    marginTop: 20,
-    fontSize: 16,
-    color: '#666',
-  },
-});
