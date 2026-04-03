@@ -2,12 +2,17 @@ import React, { useState } from 'react';
 import { StyleSheet, View, Text, TextInput, TouchableOpacity, SafeAreaView, ActivityIndicator } from 'react-native';
 import { useAuth } from '../context/AuthContext';
 import { useRouter } from 'expo-router';
+import { useTheme } from '../context/ThemeContext'; // Importando o hook de tema
 
-const RegisterScreen = ({ navigation }) => {
+const RegisterScreen = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const { signUp } = useAuth();
+  const { signUp, loadingAuth } = useAuth(); // Pegando loadingAuth se existir no seu contexto
   const router = useRouter();
+
+  // Acessando o tema global
+  const { theme } = useTheme();
+  const colors = theme.colors;
 
   const handleRegister = () => {
     if (email && password) {
@@ -18,42 +23,57 @@ const RegisterScreen = ({ navigation }) => {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
       <View style={styles.content}>
         <View style={styles.header}>
-          <Text style={styles.title}>Nova Conta</Text>
-          <Text style={styles.subtitle}>Preencha os dados para se cadastrar</Text>
+          <Text style={[styles.title, { color: colors.onSurface }]}>Nova Conta</Text>
+          <Text style={[styles.subtitle, { color: colors.onSurfaceVariant }]}>
+            Preencha os dados para se cadastrar
+          </Text>
         </View>
 
         <View style={styles.form}>
           <TextInput 
-            style={styles.input} 
+            style={[
+              styles.input, 
+              { color: colors.onSurface, borderBottomColor: colors.outlineVariant }
+            ]} 
             placeholder="E-mail" 
+            placeholderTextColor={colors.onSurfaceVariant}
             value={email}
             onChangeText={setEmail}
             keyboardType="email-address"
             autoCapitalize="none"
           />
           <TextInput 
-            style={styles.input} 
+            style={[
+              styles.input, 
+              { color: colors.onSurface, borderBottomColor: colors.outlineVariant }
+            ]} 
             placeholder="Senha" 
+            placeholderTextColor={colors.onSurfaceVariant}
             value={password}
             onChangeText={setPassword}
             secureTextEntry 
           />
           
           <TouchableOpacity 
-            style={[styles.buttonPrimary, { backgroundColor: '#34C759' }]} 
+            style={[styles.buttonPrimary, { backgroundColor: colors.primary }]} 
             onPress={handleRegister}
+            disabled={loadingAuth}
           >
-              <Text style={styles.buttonText}>Criar Conta</Text>
+            {loadingAuth ? (
+              <ActivityIndicator color={colors.onPrimary} />
+            ) : (
+              <Text style={[styles.buttonText, { color: colors.onPrimary }]}>Criar Conta</Text>
+            )}
           </TouchableOpacity>
         </View>
 
         <View style={styles.footer}>
-          <Text>Já tem uma conta? </Text>
+          <Text style={{ color: colors.onSurfaceVariant }}>Já tem uma conta? </Text>
           <TouchableOpacity onPress={() => router.push('/LoginScreen')}>
-            <Text style={styles.linkTextBold}>Fazer Login</Text>
+            <Text style={[styles.linkTextBold, { color: colors.primary }]}>Fazer Login</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -66,7 +86,6 @@ export default RegisterScreen;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFF',
   },
   content: {
     flex: 1,
@@ -79,11 +98,9 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 34,
     fontWeight: 'bold',
-    color: '#000',
   },
   subtitle: {
     fontSize: 16,
-    color: '#8E8E93',
     marginTop: 5,
   },
   form: {
@@ -92,21 +109,18 @@ const styles = StyleSheet.create({
   input: {
     height: 50,
     borderBottomWidth: 1.5,
-    borderBottomColor: '#E5E5EA',
     fontSize: 16,
     paddingVertical: 10,
     marginBottom: 15,
   },
   buttonPrimary: {
     height: 55,
-    backgroundColor: '#007AFF',
     borderRadius: 12,
     justifyContent: 'center',
     alignItems: 'center',
     marginTop: 20,
   },
   buttonText: {
-    color: '#FFF',
     fontSize: 18,
     fontWeight: '600',
   },
@@ -116,7 +130,6 @@ const styles = StyleSheet.create({
     marginTop: 40,
   },
   linkTextBold: {
-    color: '#007AFF',
     fontWeight: 'bold',
     fontSize: 14,
   },

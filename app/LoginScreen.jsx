@@ -2,12 +2,17 @@ import React, { useEffect, useState } from 'react';
 import { StyleSheet, View, Text, TextInput, TouchableOpacity, SafeAreaView, ActivityIndicator } from 'react-native';
 import { useAuth } from '../context/AuthContext';
 import { useRouter } from 'expo-router';
+import { useTheme } from '../context/ThemeContext'; // Importando o seu hook
 
-const LoginScreen = ({ navigation }) => {
+const LoginScreen = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const { signIn, loadingAuth, user } = useAuth();
   const router = useRouter();
+
+  // Acessando as cores do tema
+  const { theme } = useTheme();
+  const colors = theme.colors;
 
   const handleLogin = () => {
     if (email && password) {
@@ -18,48 +23,63 @@ const LoginScreen = ({ navigation }) => {
   };
 
   useEffect(() => {
-    if(user) {
+    if (user) {
       router.replace("/");
     }
-    }, [user]);
+  }, [user]);
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
       <View style={styles.content}>
         <View style={styles.header}>
-          <Text style={styles.title}>Login</Text>
-          <Text style={styles.subtitle}>Acesse sua conta para continuar</Text>
+          <Text style={[styles.title, { color: colors.onSurface }]}>Login</Text>
+          <Text style={[styles.subtitle, { color: colors.onSurfaceVariant }]}>
+            Acesse sua conta para continuar
+          </Text>
         </View>
 
         <View style={styles.form}>
           <TextInput 
-            style={styles.input} 
+            style={[
+              styles.input, 
+              { color: colors.onSurface, borderBottomColor: colors.outlineVariant }
+            ]} 
             placeholder="E-mail" 
+            placeholderTextColor={colors.onSurfaceVariant}
             value={email}
             onChangeText={setEmail}
             keyboardType="email-address"
             autoCapitalize="none"
           />
           <TextInput 
-            style={styles.input} 
+            style={[
+              styles.input, 
+              { color: colors.onSurface, borderBottomColor: colors.outlineVariant }
+            ]} 
             placeholder="Senha" 
+            placeholderTextColor={colors.onSurfaceVariant}
             value={password}
             onChangeText={setPassword}
             secureTextEntry 
           />
           
           <TouchableOpacity 
-            style={styles.buttonPrimary} 
+            style={[styles.buttonPrimary, { backgroundColor: colors.primary }]} 
             onPress={handleLogin}
+            disabled={loadingAuth}
           >
-              <Text style={styles.buttonText}>Entrar</Text>
+            {loadingAuth ? (
+              <ActivityIndicator color={colors.onPrimary} />
+            ) : (
+              <Text style={[styles.buttonText, { color: colors.onPrimary }]}>Entrar</Text>
+            )}
           </TouchableOpacity>
         </View>
 
         <View style={styles.footer}>
-          <Text>Não possui conta? </Text>
+          <Text style={{ color: colors.onSurfaceVariant }}>Não possui conta? </Text>
           <TouchableOpacity onPress={() => router.push('/RegisterScreen')}>
-            <Text style={styles.linkTextBold}>Cadastre-se</Text>
+            <Text style={[styles.linkTextBold, { color: colors.primary }]}>Cadastre-se</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -72,7 +92,6 @@ export default LoginScreen;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFF',
   },
   content: {
     flex: 1,
@@ -85,11 +104,9 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 34,
     fontWeight: 'bold',
-    color: '#000',
   },
   subtitle: {
     fontSize: 16,
-    color: '#8E8E93',
     marginTop: 5,
   },
   form: {
@@ -98,21 +115,18 @@ const styles = StyleSheet.create({
   input: {
     height: 50,
     borderBottomWidth: 1.5,
-    borderBottomColor: '#E5E5EA',
     fontSize: 16,
     paddingVertical: 10,
     marginBottom: 15,
   },
   buttonPrimary: {
     height: 55,
-    backgroundColor: '#007AFF',
     borderRadius: 12,
     justifyContent: 'center',
     alignItems: 'center',
     marginTop: 20,
   },
   buttonText: {
-    color: '#FFF',
     fontSize: 18,
     fontWeight: '600',
   },
@@ -122,7 +136,6 @@ const styles = StyleSheet.create({
     marginTop: 40,
   },
   linkTextBold: {
-    color: '#007AFF',
     fontWeight: 'bold',
     fontSize: 14,
   },

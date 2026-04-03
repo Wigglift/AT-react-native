@@ -4,12 +4,15 @@ import { useMovie } from '../hooks/useMovie';
 import MovieItem from '../components/MovieItem';
 import { useAuth } from '../context/AuthContext';
 import { useRouter } from 'expo-router';
-import { MaterialIcons } from '@expo/vector-icons'; // Importando ícones para ficar mais profissional
+import { MaterialIcons, FontAwesome } from '@expo/vector-icons'; 
+import { useTheme } from '../context/ThemeContext';
+import BottomBar from '../components/BottomBar';
 
 export default function MoviesScreen() {
-  // 1. Puxando o signOut do useAuth
   const { user, signOut } = useAuth();
   const router = useRouter();
+  const { theme } = useTheme();
+  const colors = theme.colors;
 
   const { 
     data, 
@@ -25,77 +28,84 @@ export default function MoviesScreen() {
     if (!user) {
       router.replace('/LoginScreen');
     }
-  }, [user]); // Adicionado user como dependência para segurança
+  }, [user]);
 
   const renderFooter = () => {
     if (!loadingMore) return null;
     return (
       <View style={styles.footerLoader}>
-        <ActivityIndicator size="large" color="#0000ff" />
+        <ActivityIndicator size="large" color={colors.primary} />
       </View>
     );
   };
 
   if (!user) {
     return (
-      <View style={[styles.mainLoader, { backgroundColor: '#fff' }]}>
-        <ActivityIndicator size="large" color="#0000ff" />
-        <Text style={{ marginTop: 10 }}>Verificando acesso...</Text>
+      <View style={[styles.mainLoader, { backgroundColor: colors.background }]}>
+        <ActivityIndicator size="large" color={colors.primary} />
+        <Text style={{ marginTop: 10, color: colors.onSurface }}>Verificando acesso...</Text>
       </View>
     );
   }
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
+      {/* HEADER / BUSCA */}
       <TextInput
-        style={styles.searchInput}
+        style={[
+          styles.searchInput, 
+          { 
+            backgroundColor: colors.surfaceVariant, 
+            color: colors.onSurfaceVariant,
+            borderColor: colors.outline 
+          }
+        ]}
         placeholder="Buscar filmes pelo título..."
+        placeholderTextColor={colors.onSurfaceVariant + '70'}
         value={searchQuery}
         onChangeText={handleSearch}
       />
 
-      {error && <Text style={styles.errorText}>Erro: {error}</Text>}
+      {error && <Text style={[styles.errorText, { color: colors.error }]}>Erro: {error}</Text>}
 
-      {loading ? (
-        <ActivityIndicator size="large" color="#0000ff" style={styles.mainLoader} />
-      ) : (
-        <FlatList
-          data={data}
-          keyExtractor={(item) => item.id.toString()}
-          renderItem={({ item }) => <MovieItem movie={item} />}
-          onEndReached={loadMore}
-          onEndReachedThreshold={0.5} 
-          ListFooterComponent={renderFooter}
-          ListEmptyComponent={
-            !loading && <Text style={styles.emptyText}>Nenhum filme encontrado.</Text>
-          }
-        />
-      )}
-      <TouchableOpacity 
-        style={styles.floatingButton} 
-        onPress={() => signOut()}
-        activeOpacity={0.7}
-      >
-        <MaterialIcons name="logout" size={24} color="#FFF" />
-        <Text style={styles.buttonText}>Sair</Text>
-      </TouchableOpacity>
+      {/* LISTA DE FILMES */}
+      <View style={{ flex: 1 }}>
+        {loading ? (
+          <ActivityIndicator size="large" color={colors.primary} style={styles.mainLoader} />
+        ) : (
+          <FlatList
+            data={data}
+            keyExtractor={(item) => item.id.toString()}
+            renderItem={({ item }) => <MovieItem movie={item} />}
+            onEndReached={loadMore}
+            onEndReachedThreshold={0.5} 
+            ListFooterComponent={renderFooter}
+            contentContainerStyle={{ paddingBottom: 20 }}
+            ListEmptyComponent={
+              !loading && (
+                <Text style={[styles.emptyText, { color: colors.onSurfaceVariant }]}>
+                  Nenhum filme encontrado.
+                </Text>
+              )
+            }
+          />
+        )}
+      </View>
+      <BottomBar />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    marginTop: 40,
+    paddingTop: 50,
     flex: 1,
-    backgroundColor: '#fff',
   },
-  
   searchInput: {
     height: 50,
     borderWidth: 1,
-    borderColor: '#ccc',
     borderRadius: 8,
-    margin: 10,
+    margin: 15,
     paddingHorizontal: 15,
     fontSize: 16,
   },
@@ -108,7 +118,6 @@ const styles = StyleSheet.create({
     paddingVertical: 20,
   },
   errorText: {
-    color: 'red',
     textAlign: 'center',
     margin: 10,
   },
@@ -116,31 +125,28 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginTop: 20,
     fontSize: 16,
-    color: '#666',
   },
-
-  // NOVO ESTILO PARA O BOTÃO
-  floatingButton: {
-    position: 'absolute',
-    bottom: 30,
-    right: 20,
-    backgroundColor: '#FF3B30', 
-    flexDirection: 'row',       
+  bottomBar: {
+    flexDirection: 'row',
+    height: 70,
+    bottom: 40,
+    borderTopWidth: 1,
+    justifyContent: 'space-around',
     alignItems: 'center',
-    paddingVertical: 12,
-    paddingHorizontal: 20,
-    borderRadius: 30,
-    // Sombras
-    elevation: 8,
+    paddingBottom: 10, // Espaço para quem usa gestos no iOS/Android
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 4.65,
+    shadowOffset: { width: 0, height: -3 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
   },
-  buttonText: {
-    color: '#FFF',
-    fontWeight: 'bold',
-    marginLeft: 8,
-    fontSize: 16,
+  navButton: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    flex: 1,
+  },
+  navText: {
+    fontSize: 12,
+    marginTop: 4,
+    fontWeight: '500',
   },
 });
